@@ -1,22 +1,23 @@
-using LocalGoods.DAL.Interfaces;
-using LocalGoods.DAL.Operations;
 using LocalGoods.DAL.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Proxies;
 using Microsoft.EntityFrameworkCore.SqlServer;
 using Microsoft.Extensions.Configuration;
-using LocalGoods.BAL.Services.Interfaces;
-using LocalGoods.BAL.Services.Implementation;
 using LocalGoods.DAL.Repositories;
 using System.Text.Json.Serialization;
-using LocalGoods.DAL.Models;
+using LocalGoods.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using LocalGoods.Core.Repositories;
+using LocalGoods.Core;
+using LocalGoods.Core.Services;
+using LocalGoods.BAL.Services;
+using LocalGoods.Mappings;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -72,16 +73,12 @@ builder.Services.AddAuthentication(options =>
     });
 
 
-
 //Added Scoped
-builder.Services.AddScoped<IFarmRepository, FarmRepository>();
-builder.Services.AddScoped<IFarmService, FarmService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();  
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IQuantityTypeRepository, QuantityTypeRepository>();
-builder.Services.AddScoped<IQuantityTypeService, QuantityTypeService>();
+//builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<ICategoryService, CategoryService>();
 
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler= ReferenceHandler.IgnoreCycles);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -105,29 +102,29 @@ builder.Services.AddSwaggerGen(option =>
 {
     option.EnableAnnotations();
     option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
-    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
+    //option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    //{
+    //    In = ParameterLocation.Header,
+    //    Description = "Please enter a valid token",
+    //    Name = "Authorization",
+    //    Type = SecuritySchemeType.Http,
+    //    BearerFormat = "JWT",
+    //    Scheme = "Bearer"
+    //});
+    //option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    //{
+    //    {
+    //        new OpenApiSecurityScheme
+    //        {
+    //            Reference = new OpenApiReference
+    //            {
+    //                Type=ReferenceType.SecurityScheme,
+    //                Id="Bearer"
+    //            }
+    //        },
+    //        new string[]{}
+    //    }
+    //});
 });
 
 var app = builder.Build();
@@ -151,9 +148,8 @@ app.UseAuthorization();
 
 //Seed the Database
 
-AppDbInitializer.SeedRolesToDb(app).Wait();
-AppDbInitializer.SeedQuantityTypesToDb(app).Wait();
-AppDbInitializer.SeedCategoriesToDb(app).Wait();
+//AppDbInitializer.SeedRolesToDb(app).Wait();
+//AppDbInitializer.SeedCategoriesToDb(app).Wait();
 
 app.MapControllers();
 

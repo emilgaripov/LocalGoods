@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LocalGoods.Core\LocalGoods.Core.csproj" />
     <ProjectReference Include="..\LocalGoods.DAL\LocalGoods.DAL.csproj" />
   </ItemGroup>
 
